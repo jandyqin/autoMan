@@ -23,7 +23,7 @@ const
             service(path, port);
         })
         .command('forever', '启动常驻服务', {}, function (argv) {
-            exec(`forever start -l ${path.join(__dirname, '../forever.log')} -a ${path.join(__dirname, '../bin/index.js')} start `);
+            exec(`forever start -l ${require('path').join(__dirname, '../forever.log')} -a ${require('path').join(__dirname, '../bin/index.js')} start `);
         })
         .example("aotuman start ")
         .help('help')
