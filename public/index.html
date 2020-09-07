@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<!-- <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css"> -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"
+    integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+<link rel="stylesheet" href="codemirror/addon/hint/show-hint.css">
+<link rel="stylesheet" href="codemirror/addon/fold/foldgutter.css">
+<title>AutoMan_console</title>
+<style>
+    p {
+        color: orange;
+        padding: 5px 10px;
+        margin: 0;
+    }
+
+    .user_msg {
+        color: #ccc;
+    }
+
+    .textarea-inherit {
+        background: #000;
+        color: #ccc;
+        width: 100%;
+        /* overflow: auto; */
+        word-break: break-all;
+        border: 0;
+        overflow: hidden;
+        resize: none;
+    }
+
+    #messages {
+        background: #000;
+    }
+
+    /* #send {
+        position: fixed;
+    } */
+
+    .fs-wrap {
+        position: relative;
+        display: inline-block;
+        width: 200px;
+        font-size: 12px;
+        line-height: 1;
+    }
+
+    .fs-label-wrap {
+        position: relative;
+        border: 1px solid #ddd;
+        cursor: default;
+    }
+
+    .fs-label-wrap,
+    .fs-dropdown {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+    }
+
+    .fs-label-wrap .fs-label {
+        padding: 4px 22px 4px 8px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .fs-arrow {
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-top: 6px solid #000;
+        position: absolute;
+        top: 0;
+        right: 5px;
+        bottom: 0;
+        margin: auto;
+    }
+
+    .fs-dropdown {
+        position: absolute;
+        background-color: #fff;
+        border: 1px solid #ccc;
+        margin-top: 5px;
+        width: 100%;
+        z-index: 1000;
+    }
+
+    .fs-dropdown .fs-options {
+        max-height: 200px;
+        overflow: auto;
+    }
+
+    .fs-search input {
+        width: 100%;
+        padding: 2px 4px;
+        border: 0;
+    }
+
+    .fs-option,
+    .fs-search,
+    .fs-optgroup-label {
+        padding: 6px 8px;
+        border-bottom: 1px solid #eee;
+        cursor: default;
+    }
+
+    .fs-option {
+        cursor: pointer;
+    }
+
+    .fs-option.hl {
+        background-color: #f5f5f5;
+    }
+
+    .fs-wrap.multiple .fs-option {
+        position: relative;
+        padding-left: 30px;
+    }
+
+    .fs-wrap.multiple .fs-checkbox {
+        position: absolute;
+        display: block;
+        width: 30px;
+        top: 0;
+        left: 0;
+        bottom: 0;
+    }
+
+    .fs-wrap.multiple .fs-option .fs-checkbox i {
+        position: absolute;
+        margin: auto;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 14px;
+        height: 14px;
+        border: 1px solid #aeaeae;
+        border-radius: 2px;
+        background-color: #fff;
+    }
+
+    .fs-wrap.multiple .fs-option.selected .fs-checkbox i {
+        background-color: rgb(17, 169, 17);
+        border-color: transparent;
+        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAGCAYAAAD+Bd/7AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABx0RVh0U29mdHdhcmUAQWRvYmUgRmlyZXdvcmtzIENTNXG14zYAAABMSURBVAiZfc0xDkAAFIPhd2Kr1WRjcAExuIgzGUTIZ/AkImjSofnbNBAfHvzAHjOKNzhiQ42IDFXCDivaaxAJd0xYshT3QqBxqnxeHvhunpu23xnmAAAAAElFTkSuQmCC');
+        background-repeat: no-repeat;
+        background-position: center;
+    }
+
+    .fs-wrap .fs-option:hover {
+        background-color: #f5f5f5;
+    }
+
+    .fs-optgroup-label {
+        font-weight: bold;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+
+    /*根据本项目自定义修改*/
+    .visibility-hidden {
+        display: block;
+        visibility: hidden;
+        position: absolute;
+        top: 0;
+    }
+
+    .deptWrap,
+    .fs-wrap,
+    .fs-label-wrap {
+        width: 100%;
+        height: 30px;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+    }
+
+    .fs-wrap {
+        position: relative
+    }
+
+    .fs-label-wrap .fs-label {
+        padding: 0;
+        height: 30px;
+        line-height: 30px;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        padding-left: 6px;
+        padding-right: 10px;
+    }
+
+    .btnFixed {
+        height: 28px;
+        text-align: center;
+    }
+
+    .btnFixed>.buttonDefault {
+        width: 60px;
+        height: 24px;
+        background: rgb(86, 148, 254);
+        border: none;
+        margin-left: 10px;
+        color: #fff;
+        margin-top: 2px;
+        border-radius: 4px;
+    }
+
+    .btnFixed>.buttonDefault:hover {
+        background: rgb(181, 226, 254);
+        color: #4284f5;
+    }
+
+    .fs-search {
+        padding: 2px 8px;
+    }
+
+    .fs-dropdown {
+        margin-top: 0px;
+        box-shadow: 4px 4px 4px #ddd;
+    }
+
+    .fs-wrap.multiple .fs-option.selected .fs-checkbox i {
+        background-color: rgb(86, 148, 254);
+    }
+</style>
+<link rel="stylesheet" href="codemirror/lib/codemirror.css">
+<script src="codemirror/lib/codemirror.js"></script>
+<script src="codemirror/addon/edit/matchbrackets.js"></script>
+<script src="codemirror/addon/comment/continuecomment.js"></script>
+<script src="codemirror/addon/comment/comment.js"></script>
+<script src="codemirror/addon/hint/javascript-hint.js"></script>
+<script src="codemirror/addon/hint/show-hint.js"></script>
+<script src="codemirror/addon/fold/brace-fold.js"></script>
+<script src="codemirror/addon/fold/comment-fold.js"></script>
+<script src="codemirror/addon/fold/foldcode.js"></script>
+<script src="codemirror/addon/fold/foldgutter.js"></script>
+<script src="codemirror/mode/javascript/javascript.js"></script>
+
+<body>
+    <div class="vertical-center">
+        <div class="container">
+            <ul id="messages" class="list-unstyled"></ul>
+            <h2 id="debuggerjs"></h2>
+            <hr />
+            <div id='selector'>
+                <!-- <select id="organId" name="organId" multiple="multiple">
+
+                </select> -->
+            </div>
+
+            <form role="form" id="chat_form" onsubmit="sendMessage(); return false;">
+                <div class="form-group">
+                    <textarea class="form-control" type="text" id="message" name="message" autocomplete="on" value=""
+                        autofocus>
+                    </textarea>
+                </div>
+                scriptName:<input id="scriptName" value="AutoMan" />
+                <button type="button" id="send" class="btn btn-primary" onclick="sendMessage('run');">
+                    Send script
+                </button>
+                <button type="button" id="saveScript" class="btn btn-primary" onclick="sendMessage('save');">
+                    Save script
+                </button>
+                <input class="btn btn-small btn-primary" data-loading-text="正在格式化js..." id="format" type="button"
+                    onclick="do_js_beautify()" value="格式化">
+            </form>
+            <!-- <div class="form-group"><span>nikename：</span><input id="name" type="text" /> <button class="btn btn-sm btn-info"
+          onclick="changName();">change</button></div>
+    </div> -->
+        </div>
+        <script src="testingtoolsjs/jquery-1.12.2.min.js"></script>
+        <script src="testingtoolsjs/multiple-select.js"></script>
+        <script src="testingtoolsjs/debugger_console.js"></script>
+        <script src="testingtoolsjs/jsbeautify.js"></script>
+        <!-- <script src="testingtoolsjs/sockjs.js"></script>
+        <script src="testingtoolsjs/sockjs.min.js"></script> -->
+        <script>
+            function do_js_beautify() {
+                var js_source = CodeMirrorEditor.getValue().replace(/^\s+/, '');
+                if (js_source.length == 0)
+                    return;
+                tabchar = ' ';
+                tabsize = 4;
+                var fjs = js_beautify(js_source, tabsize, tabchar);
+                CodeMirrorEditor.setValue(fjs);
+            }
+        </script>
+</body>
+
+</html>

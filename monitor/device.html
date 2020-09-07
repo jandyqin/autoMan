@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <title>automan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Loading Bootstrap -->
+    <link href="css/vendor/bootstrap.min.css" rel="stylesheet">
+    <!-- Loading Flat UI -->
+    <link href="css/flat-ui.css" rel="stylesheet">
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements. All other JS at the end of file. -->
+    <!--[if lt IE 9]>
+      <script src="../../dist/js/vendor/html5shiv.js"></script>
+      <script src="../../dist/js/vendor/respond.min.js"></script>
+    <![endif]-->
+    <style type="text/css">
+    .refresh:before {
+        font-family: Flat-UI-Pro-Icons;
+        content: "\e61a";
+        padding: 10px;
+    }
+
+    .thumbnail img {
+        width: 90%;
+        height: 60%;
+    }
+
+    .thumbnail .caption {
+        width: 90%;
+        height: 30%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h6><span class="refresh"></span>设备列表</h6>
+        <div class="row" id="row">
+        </div>
+    </div>
+    <script type="text/javascript" src="scripts/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript">
+    var lockMap = {};
+    const imagePrefix = 'data:image/jpeg;base64,';
+
+    function refreshImgSrc(host) {
+        url = `http://${host}/screenBase64`;
+        isLocking = lockMap[host];
+        if (isLocking == undefined) {
+            lockMap[host] = true;
+        } else if (isLocking == true) {
+            return;
+        }
+        lockMap[host] = true;
+        content = '';
+        $.ajax({
+            url: url,
+            type: "get",
+            timeout: 700,
+            success: function(result) {
+                if (result) {
+                    content += result;
+                }
+            },
+            error: function() {
+                lockMap[host] = false;
+                // img = document.getElementById(host);
+                // if (img == null) {
+                //     return false;
+                // }
+                // removeImg(img);
+                content = '';
+            },
+            complete: function() {
+                img = document.getElementById(host);
+                if (img == null) {
+                    return;
+                }
+                if (content.length > 0) {
+                    img.src = imagePrefix + content;
+                }
+                lockMap[host] = false;
+                content = '';
+            }
+        });
+    }
+
+    var refreshImg = function() {
+        $("img").each(function() {
+            host = $(this).attr('id');
+            refreshImgSrc(host);
+        });
+    }
+
+    var appendImg = function(host) {
+        d = document.getElementById(host);
+        if (d) {
+            return false;
+        }
+        imgHtml = '<div class="col-sm-12 col-md-6"><div class="thumbnail">';
+        imgHtml += '<div class="caption">';
+        imgHtml += `<h3>${host}</h3></div>`;
+        imgHtml += `<img id="${host}" alt="设备失去连接，请稍后重试">`;
+        imgHtml += '</div></div>';
+        $('#row').append(imgHtml);
+        imgHtml = '';
+    }
+
+    var clients;
+
+    var loadImg = function(clients) {
+        if (clients == undefined) {
+            return false;
+        }
+
+        for (var i = clients.length - 1; i >= 0; i--) {
+            host = clients[i];
+            appendImg(host);
+        }
+    }
+
+    var removeImg = function(img) {
+        tbd = img.parentElement;
+        cold = tbd.parentElement;
+        cold.remove(tbd);
+    }
+
+    var checkImg = function() {
+        imgs = document.getElementsByTagName('img');
+        $.each(imgs, function(idx, img) {
+            if (img == undefined) {
+                return;
+            }
+            host = img.getAttribute('id');
+            if (clients.indexOf(host) < 0) {
+                removeImg(img);
+            }
+        });
+    }
+
+
+    $(document).ready(function() {
+        var sock;
+        var sockUrl = `ws://${window.location.host}`;
+        sock = new WebSocket(sockUrl);
+        sock.onopen = function() {
+            console.log('connected');
+            sock.send('monitor');
+        }
+        sock.onmessage = function(e) {
+            data = e.data;
+            j = JSON.parse(data);
+            monitors = j.data.deviceList;
+            console.log(monitors);
+            if (monitors == undefined) {
+                return false;
+            }
+            clients = [];
+            $.each(monitors, function(idx, client) {
+                host = client.IP + ':' + client.port;
+                clients.push(host);
+            })
+
+            checkImg();
+
+            loadImg(clients);
+
+            $("img").click(function() {
+                var win = window.open();
+                win.location.href = 'http://' + $(this).attr('id');
+            })
+        }
+
+        setInterval(refreshImg, 2000);
+
+        $('.refresh').click(function() {
+            location.reload();
+        });
+
+    })
+    </script>
+</body>
+
+</html>
