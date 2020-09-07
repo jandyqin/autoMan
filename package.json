@@ -19,6 +19,7 @@
     "chalk": "^4.1.0",
     "express": "^4.17.1",
     "express-ws": "^4.0.0",
+    "forever": "^3.0.2",
     "fs": "0.0.1-security",
     "hashmap": "^2.4.0",
     "multiparty": "^4.2.2",
