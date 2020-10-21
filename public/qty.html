@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+
+    <script src="./mqtt.js"></script>
+    <script>
+
+
+        // Create a client instance
+        var options = {
+            //mqtt客户端的id，这里面应该还可以加上其他参数，具体看官方文档
+            clientId: 'mqttjs_' + Math.random().toString(16).substr(2, 8)
+        }
+        //浏览器采用websocket协议，host主机地址为192.168.0.200，端口为9001，路径为/mqtt
+        var client = mqtt.connect(`ws://${location.hostname}:9980`, options) // you add a ws:// url here
+
+        //建立连接
+        client.on('connect', function () {
+            console.log("connect success!")
+            //订阅主题 presence
+            client.subscribe('other', function (err) {
+                if (!err) {
+                    console.log("other success!")
+                    //发布主题presence,消息内容为Hello mqtt
+                    client.publish('other', 'Hello mqtt')
+                } else {
+                    //打印错误
+                    console.log(err)
+                }
+            })
+        })
+
+        //如果连接错误，打印错误
+        client.on('error', function (err) {
+            console.log(err)
+            client.end()
+        })
+
+        //如果client订阅主题成功，那么这里就是当接收到自己订阅主题的处理逻辑
+        client.on('message', function (topic, message) {
+            // message is Buffer,此处就是打印消息的具体内容
+            console.log(topic, ' -> ', message.toString())
+        })
+        function send() {
+            var s = document.getElementById("msg").value;
+            if (s) {
+                message = "{time:" + new Date().Format("yyyy-MM-dd hh:mm:ss") + ", content:" + (s) + ", from: web console}";
+                client.publish('other', message);
+                document.getElementById("msg").value = "";
+            }
+        }
+
+        var count = 0;
+
+        function start() {
+            window.tester = window.setInterval(function () {
+                if (client.connected) {
+                    var message = "{time:" + new Date().Format("yyyy-MM-dd hh:mm:ss") + ", content:" + (count++) +
+                        ", from: web console}";
+                    client.publish('other', message)
+                }
+            }, 1000);
+        }
+
+        function stop() {
+            window.clearInterval(window.tester);
+        }
+
+        Date.prototype.Format = function (fmt) { //author: meizz 
+            var o = {
+                "M+": this.getMonth() + 1, //月份 
+                "d+": this.getDate(), //日 
+                "h+": this.getHours(), //小时 
+                "m+": this.getMinutes(), //分 
+                "s+": this.getSeconds(), //秒 
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+                "S": this.getMilliseconds() //毫秒 
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[
+                    k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        }
+    </script>
+</head>
+
+<body>
+    <input type="text" id="msg" />
+    <input type="button" value="Send" onclick="send()" />
+    <input type="button" value="Start" onclick="start()" />
+    <input type="button" value="Stop" onclick="stop()" />
+</body>
+
+</html>

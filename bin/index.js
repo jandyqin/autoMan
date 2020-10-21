@@ -11,7 +11,7 @@ const
             type: 'string'
         })
         .command('start', '启动服务', {}, function (argv) {
-            const service = require('../serice');
+            const service = require('../service');
             var path = process.cwd();
             var port = 8860;
             if (argv.p) {
